@@ -1,21 +1,26 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
+
+*.json
+*.zip
 *.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+*.txt
+*.yaml
+*.log
 
-# Test binary, built with `go test -c`
-*.test
+web/*
+beatmaps/*
+log/*
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+osuFastCashedBeatmapMirror
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+*.bak
+nerinyan-download-apiv1
+nerinyan-download-apiv1-MULTI
+/nerinyan-download-apiv1.7z
+.idea/*
+/.idea/*
+/_script/beatmapMirror.sql
+/nerinyan-download-apiv1_ARM64
 
-# Go workspace file
-go.work
+/_testDGO/
+
+.config.json.swp
