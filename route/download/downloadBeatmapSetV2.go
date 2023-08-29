@@ -139,7 +139,9 @@ func DownloadBeatmapSetV2(c echo.Context) (err error) {
 		err = mariadb.Mariadb.Model(&_req{}).Where(&_req{BeatmapsetId: req.Sid}).Find(&req).Error
 	} else if req.Mid != 0 {
 		err = mariadb.Mariadb.Model(&_req{}).Where("BEATMAPSET_ID = (SELECT BEATMAPSET_ID FROM BEATMAP WHERE BEATMAP_ID = ?)", req.Mid).Find(&req).Error
-	} else {
+	}
+
+	if req.BeatmapsetId == 0 {
 		err = errors.New("set id & map id not found")
 	}
 
@@ -151,6 +153,7 @@ func DownloadBeatmapSetV2(c echo.Context) (err error) {
 		logger.Errorf("beatmapset %d download disabled", req.BeatmapsetId)
 		return fmt.Errorf("beatmapset %d download disabled", req.BeatmapsetId)
 	}
+
 	// 유효한 요청인지 체크
 	//=====================================================================================================================
 	//=====================================================================================================================

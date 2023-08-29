@@ -39,7 +39,7 @@ func main() {
 		logger.Errorf("%+v", err)
 		_ = c.JSON(
 			http.StatusInternalServerError, map[string]interface{}{
-				"error":      err,
+				"error":      err.Error(),
 				"request_id": c.Response().Header().Get("X-Request-Id"),
 				"time":       time.Now(),
 			},

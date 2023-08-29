@@ -21,7 +21,13 @@ func IsExistDir(path string) bool {
 }
 
 func Save2File(data []byte, path string) (err error) {
-	logger.Info(path)
+	defer func() {
+		if err != nil {
+			logger.Infof("[%s] save failed. error", path, err.Error())
+		} else {
+			logger.Infof("[%s] saved", path)
+		}
+	}()
 	tmp := path + "." + strconv.FormatInt(time.Now().UnixNano(), 16)
 	func() {
 		f, err := create(tmp)
