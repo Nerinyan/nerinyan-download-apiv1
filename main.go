@@ -36,7 +36,7 @@ func main() {
 	e := echo.New()
 	e.HideBanner = true
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		pterm.Error.WithShowLineNumber().Printfln("%+v", err)
+		logger.Errorf("%+v", err)
 		_ = c.JSON(
 			http.StatusInternalServerError, map[string]interface{}{
 				"error":      err,
@@ -75,10 +75,10 @@ func main() {
 	e.GET("/status", common.Status)
 
 	// 맵 파일 다운로드 ===================================================================================================
-	e.GET("/d/:setId", download.D)
+	e.GET("/d/:setId", download.DownloadBeatmapSetV2)
 	//e.GET("/d/:setId", download.DownloadBeatmapSet, download.Embed)
-	e.GET("/beatmap/:mapId", download.DownloadBeatmapSet)
-	e.GET("/beatmapset/:setId", download.DownloadBeatmapSet)
+	//e.GET("/beatmap/:mapId", download.DownloadBeatmapSet)
+	//e.GET("/beatmapset/:setId", download.DownloadBeatmapSet)
 	//TODO 맵아이디, 맵셋아이디 지원
 
 	// 비트맵 BG  =========================================================================================================
