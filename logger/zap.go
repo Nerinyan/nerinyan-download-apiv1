@@ -21,6 +21,7 @@ var rotatedLogFile = &lumberjack.Logger{
 	MaxAge:     0,                        // 일 단위로 보관할 로그 파일의 최대 수명
 	Compress:   true,                     // 로그 파일을 gzip으로 압축할지 여부
 }
+var _ZAP_T *zap.Logger
 var _ZAP *zap.Logger
 
 func init() {
@@ -49,7 +50,8 @@ func init() {
 	)
 
 	// 로거 생성 및 caller 정보 추가 (파일과 라인 정보를 위해)
-	_ZAP = zap.New(core, zap.AddStacktrace(zap.ErrorLevel), zap.AddCaller(), zap.AddCallerSkip(1))
+	_ZAP_T = zap.New(core, zap.AddStacktrace(zap.ErrorLevel), zap.AddCaller(), zap.AddCallerSkip(1))
+	_ZAP = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
 
 }
 func Error(a ...any) {
@@ -68,6 +70,22 @@ func Fatal(a ...any) {
 	_ZAP.Fatal(fmt.Sprint(a...))
 }
 
+func ErrorT(a ...any) {
+	_ZAP_T.Error(fmt.Sprint(a...))
+}
+func InfoT(a ...any) {
+	_ZAP_T.Info(fmt.Sprint(a...))
+}
+func DebugT(a ...any) {
+	_ZAP_T.Debug(fmt.Sprint(a...))
+}
+func WarnT(a ...any) {
+	_ZAP_T.Warn(fmt.Sprint(a...))
+}
+func FatalT(a ...any) {
+	_ZAP_T.Fatal(fmt.Sprint(a...))
+}
+
 // ===========================================
 func Errorf(format string, a ...any) {
 	_ZAP.Error(fmt.Sprintf(format, a...))
@@ -83,4 +101,20 @@ func Warnf(format string, a ...any) {
 }
 func Fatalf(format string, a ...any) {
 	_ZAP.Fatal(fmt.Sprintf(format, a...))
+}
+
+func ErrorfT(format string, a ...any) {
+	_ZAP_T.Error(fmt.Sprintf(format, a...))
+}
+func InfofT(format string, a ...any) {
+	_ZAP_T.Info(fmt.Sprintf(format, a...))
+}
+func DebugfT(format string, a ...any) {
+	_ZAP_T.Debug(fmt.Sprintf(format, a...))
+}
+func WarnfT(format string, a ...any) {
+	_ZAP_T.Warn(fmt.Sprintf(format, a...))
+}
+func FatalfT(format string, a ...any) {
+	_ZAP_T.Fatal(fmt.Sprintf(format, a...))
 }

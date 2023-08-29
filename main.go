@@ -59,7 +59,7 @@ func main() {
 		middleware.RemoveTrailingSlash(),
 
 		//1차 필터
-		middleware.CORSWithConfig(middleware.CORSConfig{AllowOrigins: []string{"*"}, AllowMethods: []string{echo.GET, echo.HEAD, echo.POST}}),
+		middleware.CORSWithConfig(middleware.CORSConfig{AllowOrigins: []string{"*"}, AllowMethods: []string{echo.GET}}),
 
 		//2차 필터
 
@@ -75,8 +75,7 @@ func main() {
 	e.GET("/status", common.Status)
 
 	// 맵 파일 다운로드 ===================================================================================================
-	e.GET("/d/:setId", download.DownloadBeatmapSetV2)
-	//e.GET("/d/:setId", download.DownloadBeatmapSet, download.Embed)
+	e.GET("/d/:setId", download.DownloadBeatmapSetV2, download.Embed)
 	//e.GET("/beatmap/:mapId", download.DownloadBeatmapSet)
 	//e.GET("/beatmapset/:setId", download.DownloadBeatmapSet)
 	//TODO 맵아이디, 맵셋아이디 지원

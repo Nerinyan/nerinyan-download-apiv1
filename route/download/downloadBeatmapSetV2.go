@@ -359,6 +359,7 @@ func downloadFromBancho2(beatmapSetId int) (reader io.ReadCloser, length int64, 
 		return
 	}
 	req.Header.Add("Authorization", config.Config.Osu.Token.TokenType+" "+config.Config.Osu.Token.AccessToken)
+	callBancho() // 반쵸 api 카운트
 	res, err := client.Do(req)
 	if err != nil {
 		return
