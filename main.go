@@ -76,8 +76,8 @@ func main() {
 
 	// 맵 파일 다운로드 ===================================================================================================
 	e.GET("/d/:setId", download.DownloadBeatmapSetV2, download.Embed)
-	//e.GET("/beatmap/:mapId", download.DownloadBeatmapSet)
-	//e.GET("/beatmapset/:setId", download.DownloadBeatmapSet)
+	e.GET("/beatmapset/:setId", download.DownloadBeatmapSetV2)
+	e.GET("/beatmap/:mapId", download.DownloadBeatmapSetV2)
 	//TODO 맵아이디, 맵셋아이디 지원
 
 	// 비트맵 BG  =========================================================================================================
