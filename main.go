@@ -8,7 +8,6 @@ import (
 	"github.com/Nerinyan/nerinyan-download-apiv1/middlewareFunc"
 	"github.com/Nerinyan/nerinyan-download-apiv1/route/common"
 	"github.com/Nerinyan/nerinyan-download-apiv1/route/download"
-	"github.com/Nerinyan/nerinyan-download-apiv1/src"
 	"github.com/Nerinyan/nerinyan-download-apiv1/webhook"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -21,8 +20,6 @@ func init() {
 	ch := make(chan struct{})
 	config.LoadConfig()
 	mariadb.Connect()
-	src.StartIndex()
-	//middlewareFunc.StartHandler()
 	go banchoCrawler.LoadBancho(ch)
 	_ = <-ch
 
