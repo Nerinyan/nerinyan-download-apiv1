@@ -313,7 +313,8 @@ func rebuildOsz(data []byte, notInRegexp []*regexp.Regexp) (res bytes.Buffer, er
 				logger.Fatalf("Failed to open file %s: %v", f.Name, err)
 				return
 			}
-			fw, err := w.Create(f.Name)
+
+			fw, err := w.CreateRaw(&f.FileHeader)
 			if err != nil {
 				logger.Fatalf("Failed to create entry for %s: %v", f.Name, err)
 				return
