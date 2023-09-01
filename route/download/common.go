@@ -40,11 +40,11 @@ const _SERVER_OSZ_EXT = "zip"
 
 var _REGEXP_FN_NOT_ALLOW, _ = regexp.Compile(`([\\/:*?"<>|])`)
 var _REGEXP_MANIA_KEY, _ = regexp.Compile(`\[[0-9]K]`) // 시작부분만 역슬래시 붙혀줘도 됨
-var _REGEXP_BG_EXT, _ = regexp.Compile("[.](png|jpg|jpeg)$")
+
 var _REGEXP_NV, _ = regexp.Compile(`[.](mp4|m4v)$`)
-var _REGEXP_NB, _ = regexp.Compile(`[.]osb$`)
+var _REGEXP_NS, _ = regexp.Compile(`[.]osb$`)
 var _REGEXP_NH, _ = regexp.Compile(`^(normal-|nightcore-|drum-|soft-|spinnerspin)`)
-var _REGEXP_NS = _REGEXP_BG_EXT
+var _REGEXP_NB, _ = regexp.Compile("[.](png|jpg|jpeg)$")
 
 func getSourceBGPath(sid, mid int) (path string) {
 	path = fmt.Sprintf("%s/%d/", config.Config.TargetDir, sid)
