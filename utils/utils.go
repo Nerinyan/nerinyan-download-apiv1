@@ -87,3 +87,7 @@ func GetFileLine() string {
 	_, file, line, _ := runtime.Caller(1)
 	return fmt.Sprintf("%s:%d ", file, line)
 }
+
+func IE[T any](v T, e error) T {
+	return v
+}

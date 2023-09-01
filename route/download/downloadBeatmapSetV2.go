@@ -16,43 +16,10 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
-var downloadCount int
-var mutex = sync.Mutex{}
-
-func isLimitedDownload() bool {
-	mutex.Lock()
-	defer mutex.Unlock()
-	return downloadCount > 80
-}
-func callBancho() {
-	mutex.Lock()
-	defer mutex.Unlock()
-	downloadCount++
-}
-func init() {
-	ticker := time.NewTicker(time.Minute * 10)
-	go func() {
-		for ; ; <-ticker.C {
-			mutex.Lock()
-			downloadCount = 0
-			mutex.Unlock()
-		}
-	}()
-}
-
-const _SERVER_OSZ_EXT = "zip"
-
-var _REGEXP_NOT_ALLOW_FN, _ = regexp.Compile(`([\\/:*?"<>|])`)
-var _REGEXP_NV, _ = regexp.Compile(`[.](mp4|m4v)$`)
-var _REGEXP_NB, _ = regexp.Compile(`[.]osb$`)
-var _REGEXP_NH, _ = regexp.Compile(`^(normal-|nightcore-|drum-|soft-|spinnerspin)`)
-var _REGEXP_NS, _ = regexp.Compile("[.](png|jpg)$")
-
-type _req struct {
+type oszReq struct {
 	Sid             int       `param:"setId"`
 	Mid             int       `param:"mapId"`
 	Novideo         bool      `query:"noVideo"`
@@ -71,33 +38,33 @@ type _req struct {
 	DownloadDisable bool      `gorm:"column:AVAILABILITY_DOWNLOAD_DISABLED"`
 }
 
-func (_req) TableName() string {
-	return "BEATMAPSET"
+func (oszReq) TableName() string {
+	return _TB_BEATMAPSET
 }
-func (v *_req) isModify() bool {
+func (v *oszReq) isModify() bool {
 	return v.Nv || v.Novideo || v.Nb || v.Nobackground || v.Nh || v.NoHitsound || v.Ns || v.NoStoryboard
 }
 
-func (v *_req) getSourceFileName() (path string) {
+func (v *oszReq) getSourceFileName() (path string) {
 	path = fmt.Sprintf("%s/%d/%d", config.Config.TargetDir, v.BeatmapsetId, v.BeatmapsetId)
 	path += "." + _SERVER_OSZ_EXT
 	return
 }
 
-func (v *_req) getOptionFileName() (path string) {
+func (v *oszReq) getOptionFileName() (path string) {
 	path = fmt.Sprintf("%s/%d/%d", config.Config.TargetDir, v.BeatmapsetId, v.BeatmapsetId)
 	var args []string
 
-	if v.Nv {
+	if v.Nv || v.Novideo {
 		args = append(args, "nv")
 	}
-	if v.Nb {
+	if v.Nb || v.Nobackground {
 		args = append(args, "nb")
 	}
-	if v.Nh {
+	if v.Nh || v.NoHitsound {
 		args = append(args, "nh")
 	}
-	if v.Ns {
+	if v.Ns || v.NoStoryboard {
 		args = append(args, "ns")
 	}
 	if len(args) > 0 {
@@ -107,38 +74,38 @@ func (v *_req) getOptionFileName() (path string) {
 	return
 
 }
-func (v *_req) getFilterRegex() (regexps []*regexp.Regexp) {
-	if v.Nv {
+func (v *oszReq) getFilterRegex() (regexps []*regexp.Regexp) {
+	if v.Nv || v.Novideo {
 		regexps = append(regexps, _REGEXP_NV)
 	}
-	if v.Nb {
+	if v.Nb || v.Nobackground {
 		regexps = append(regexps, _REGEXP_NB)
 	}
-	if v.Nh {
+	if v.Nh || v.NoHitsound {
 		regexps = append(regexps, _REGEXP_NH)
 	}
-	if v.Ns {
+	if v.Ns || v.NoStoryboard {
 		regexps = append(regexps, _REGEXP_NS)
 	}
 	return
 
 }
-func (v *_req) GetClientFilename() string {
-	return _REGEXP_NOT_ALLOW_FN.ReplaceAllString(fmt.Sprintf("%d %s - %s.osz", v.BeatmapsetId, v.Artist, v.Title), "_")
+func (v *oszReq) GetClientFilename() string {
+	return _REGEXP_FN_NOT_ALLOW.ReplaceAllString(fmt.Sprintf("%d %s - %s.osz", v.BeatmapsetId, v.Artist, v.Title), "_")
 }
 
 func DownloadBeatmapSetV2(c echo.Context) (err error) {
 
-	var req _req
+	var req oszReq
 	err = c.Bind(&req)
 	if err != nil {
 		logger.Error(err)
 		return
 	}
 	if req.Sid != 0 {
-		err = mariadb.Mariadb.Model(&_req{}).Where(&_req{BeatmapsetId: req.Sid}).Find(&req).Error
+		err = mariadb.Mariadb.Model(&oszReq{}).Where(&oszReq{BeatmapsetId: req.Sid}).Find(&req).Error
 	} else if req.Mid != 0 {
-		err = mariadb.Mariadb.Model(&_req{}).Where("BEATMAPSET_ID = (SELECT BEATMAPSET_ID FROM BEATMAP WHERE BEATMAP_ID = ?)", req.Mid).Find(&req).Error
+		err = mariadb.Mariadb.Model(&oszReq{}).Where("BEATMAPSET_ID = (SELECT BEATMAPSET_ID FROM BEATMAP WHERE BEATMAP_ID = ?)", req.Mid).Find(&req).Error
 	}
 
 	if req.BeatmapsetId == 0 {
@@ -253,7 +220,7 @@ func DownloadBeatmapSetV2(c echo.Context) (err error) {
 
 // 에러가 발생한경우 스트림을 닫고 에러를 리턴하고
 // 에러가 없는경우 열려있는 스트림을 리턴함
-func getBeatmapData(req _req) (reader io.ReadCloser, length int64, cached, save bool, err error) {
+func getBeatmapData(req oszReq) (reader io.ReadCloser, length int64, cached, save bool, err error) {
 	if file, _ := os.Open(req.getOptionFileName()); file != nil { // 정확히 일치하는게 있는지 확인함
 		if stat, _ := file.Stat(); stat != nil && !stat.IsDir() && stat.ModTime().After(req.LastUpdated) { // 만료되지 않은 파일인경우
 			reader = file
@@ -360,47 +327,4 @@ func rebuildOsz(data []byte, notInRegexp []*regexp.Regexp) (res bytes.Buffer, er
 
 	}
 	return
-}
-
-func downloadFromBancho2(beatmapSetId int) (reader io.ReadCloser, length int64, err error) {
-	client := &http.Client{Timeout: time.Second * 60}
-	url := fmt.Sprintf("https://osu.ppy.sh/api/v2/beatmapsets/%d/download", beatmapSetId)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return
-	}
-	req.Header.Add("Authorization", config.Config.Osu.Token.TokenType+" "+config.Config.Osu.Token.AccessToken)
-	callBancho() // 반쵸 api 카운트
-	res, err := client.Do(req)
-	if err != nil {
-		return
-	}
-	if res.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%s request error %s", req.URL, res.Status)
-		_ = res.Body.Close()
-		return
-	}
-	//===========================================
-	io.MultiReader()
-	return res.Body, res.ContentLength, nil
-}
-
-func downloadFromBeatconnect2(beatmapSetId int) (reader io.ReadCloser, length int64, err error) {
-	client := &http.Client{Timeout: time.Second * 60}
-	url := fmt.Sprintf("https://beatconnect.io/b/%d", beatmapSetId)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return
-	}
-	res, err := client.Do(req)
-	if err != nil {
-		return
-	}
-	if res.StatusCode != http.StatusOK {
-		err = fmt.Errorf("%s request error %s", req.URL, res.Status)
-		_ = res.Body.Close()
-		return
-	}
-	//===========================================
-	return res.Body, res.ContentLength, nil
 }

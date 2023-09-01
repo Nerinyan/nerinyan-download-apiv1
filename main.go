@@ -75,15 +75,11 @@ func main() {
 	e.GET("/d/:setId", download.DownloadBeatmapSetV2, download.Embed)
 	e.GET("/beatmapset/:setId", download.DownloadBeatmapSetV2)
 	e.GET("/beatmap/:mapId", download.DownloadBeatmapSetV2)
-	//TODO 맵아이디, 맵셋아이디 지원
 
 	// 비트맵 BG  =========================================================================================================
-	//e.GET(
-	//    "/bg/:setId", func(c echo.Context) error {
-	//        redirectUrl := "https://subapi.nerinyan.moe/bg/" + c.Param("setId")
-	//        return c.Redirect(http.StatusPermanentRedirect, redirectUrl)
-	//    },
-	//)
+	//e.GET("/bg/:id", download.BeatmapBG) // 사용 중지할 예정
+	//e.GET("/bg/s/:sid", download.BeatmapBG)
+	//e.GET("/bg/m/:mid", download.BeatmapBG)
 
 	// 개발중 || 테스트중 ===================================================================================================
 
