@@ -19,11 +19,15 @@ import (
 	"time"
 )
 
+func (oszReq) TableName() string {
+	return _TB_BEATMAPSET
+}
+
 type oszReq struct {
 	Sid             int       `param:"setId"`
 	Mid             int       `param:"mapId"`
-	Novideo         bool      `query:"noVideo"`
-	Nobackground    bool      `query:"noBg"`
+	NoVideo         bool      `query:"noVideo"`
+	NoBackground    bool      `query:"noBg"`
 	NoHitsound      bool      `query:"noHitsound"`
 	NoStoryboard    bool      `query:"noStoryboard"`
 	Nv              bool      `query:"nv"`
@@ -38,11 +42,20 @@ type oszReq struct {
 	DownloadDisable bool      `gorm:"column:AVAILABILITY_DOWNLOAD_DISABLED"`
 }
 
-func (oszReq) TableName() string {
-	return _TB_BEATMAPSET
+func (v *oszReq) IsNoVideo() bool {
+	return v.Nv || v.NoVideo
+}
+func (v *oszReq) IsNoBackground() bool {
+	return v.Nb || v.NoBackground
+}
+func (v *oszReq) IsNoHitsound() bool {
+	return v.Nh || v.NoHitsound
+}
+func (v *oszReq) IsNoStoryboard() bool {
+	return v.Ns || v.NoStoryboard
 }
 func (v *oszReq) isModify() bool {
-	return v.Nv || v.Novideo || v.Nb || v.Nobackground || v.Nh || v.NoHitsound || v.Ns || v.NoStoryboard
+	return v.IsNoVideo() || v.IsNoBackground() || v.IsNoHitsound() || v.IsNoStoryboard()
 }
 
 func (v *oszReq) getSourceFileName() (path string) {
@@ -55,16 +68,16 @@ func (v *oszReq) getOptionFileName() (path string) {
 	path = fmt.Sprintf("%s/%d/%d", config.Config.TargetDir, v.BeatmapsetId, v.BeatmapsetId)
 	var args []string
 
-	if v.Nv || v.Novideo {
+	if v.IsNoVideo() {
 		args = append(args, "nv")
 	}
-	if v.Nb || v.Nobackground {
+	if v.IsNoBackground() {
 		args = append(args, "nb")
 	}
-	if v.Nh || v.NoHitsound {
+	if v.IsNoHitsound() {
 		args = append(args, "nh")
 	}
-	if v.Ns || v.NoStoryboard {
+	if v.IsNoStoryboard() {
 		args = append(args, "ns")
 	}
 	if len(args) > 0 {
@@ -166,7 +179,7 @@ func DownloadBeatmapSetV2(c echo.Context) (err error) {
 	// 재작업이 필요한경우
 
 	if req.isModify() {
-		logger.Infof("nv: %t, nb: %t, nh: %t, ns: %t", req.Nv, req.Nb, req.Nh, req.Ns)
+		logger.Infof("nv: %t, nb: %t, nh: %t, ns: %t", req.IsNoVideo(), req.IsNoBackground(), req.IsNoHitsound(), req.IsNoStoryboard())
 		data, e := io.ReadAll(reader)
 
 		if e != nil {
@@ -179,7 +192,7 @@ func DownloadBeatmapSetV2(c echo.Context) (err error) {
 			}
 		}
 
-		rd, e := rebuildOsz(data, req.Nv, req.Nh, req.Nb, req.Ns)
+		rd, e := rebuildOsz(data, req.IsNoVideo(), req.IsNoBackground(), req.IsNoHitsound(), req.IsNoStoryboard())
 		if e != nil {
 			logger.Error(e)
 			return e
