@@ -192,7 +192,8 @@ func DownloadBeatmapSetV2(c echo.Context) (err error) {
 			}
 		}
 
-		rd, e := rebuildOsz(data, req.IsNoVideo(), req.IsNoBackground(), req.IsNoHitsound(), req.IsNoStoryboard())
+		//nv, nh, nb, ns
+		rd, e := rebuildOsz(data, req.IsNoVideo(), req.IsNoHitsound(), req.IsNoBackground(), req.IsNoStoryboard())
 		if e != nil {
 			logger.Error(e)
 			return e
