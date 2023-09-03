@@ -39,7 +39,8 @@ const _TB_BEATMAP = "BEATMAPS"
 const _SERVER_OSZ_EXT = "zip"
 
 var _REGEXP_FN_NOT_ALLOW, _ = regexp.Compile(`([\\/:*?"<>|])`)
-var _REGEXP_MANIA_KEY, _ = regexp.Compile(`\[[0-9]K]`) // 시작부분만 역슬래시 붙혀줘도 됨
+var _REGEXP_MANIA_KEY, _ = regexp.Compile(`\[[0-9]K]`)     // 시작부분만 역슬래시 붙혀줘도 됨
+var _REGEXP_OSU_FILES, _ = regexp.Compile(`[.](osb|osu)$`) // 파싱 대상 파일확장자
 
 var _REGEXP_NV, _ = regexp.Compile(`[.](mp4|m4v)$`)
 var _REGEXP_NS, _ = regexp.Compile(`[.]osb$`)

@@ -57,7 +57,7 @@ func DiscordError(v *bodyStruct.ErrorStruct) {
 		Embeds: []embeds{
 			{
 				Title:       "Error Code: *" + v.Code + "*",
-				Description: "```json\n" + string(*utils.ToJsonIndentString(v)) + "```",
+				Description: "```json\n" + utils.ToJsonIndentString(v) + "```",
 				Color:       16711680,
 				Footer: footer{
 					Text: "RequestID: " + v.RequestId,
@@ -83,7 +83,7 @@ func DiscordInfo(v *bodyStruct.ErrorStruct) {
 		Embeds: []embeds{
 			{
 				Title:       "Info",
-				Description: "```json\n" + string(*utils.ToJsonIndentString(v)) + "```",
+				Description: "```json\n" + utils.ToJsonIndentString(v) + "```",
 				Color:       65535,
 				Footer: footer{
 					Text: "RequestID: " + v.RequestId,

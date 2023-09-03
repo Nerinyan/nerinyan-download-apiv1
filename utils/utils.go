@@ -8,13 +8,13 @@ import (
 	"strings"
 )
 
-func ToJsonIndentString(i any) (str *[]byte) {
+func ToJsonIndentString(i any) (str string) {
 	b, err := json.MarshalIndent(i, "", "    ")
 	if err != nil {
 		pterm.Error.WithShowLineNumber().Println(err)
 		return
 	}
-	return &b
+	return string(b)
 }
 func ToJsonString(i any) (str *[]byte) {
 	b, err := json.Marshal(i)

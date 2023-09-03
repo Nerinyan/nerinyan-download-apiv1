@@ -8,12 +8,12 @@ import (
 	"github.com/Nerinyan/nerinyan-download-apiv1/config"
 	"github.com/Nerinyan/nerinyan-download-apiv1/db/mariadb"
 	"github.com/Nerinyan/nerinyan-download-apiv1/logger"
+	"github.com/Nerinyan/nerinyan-download-apiv1/osu"
 	"github.com/Nerinyan/nerinyan-download-apiv1/utils"
 	"github.com/labstack/echo/v4"
 	"io"
 	"net/http"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -74,22 +74,7 @@ func (v *oszReq) getOptionFileName() (path string) {
 	return
 
 }
-func (v *oszReq) getFilterRegex() (regexps []*regexp.Regexp) {
-	if v.Nv || v.Novideo {
-		regexps = append(regexps, _REGEXP_NV)
-	}
-	if v.Nb || v.Nobackground {
-		regexps = append(regexps, _REGEXP_NB)
-	}
-	if v.Nh || v.NoHitsound {
-		regexps = append(regexps, _REGEXP_NH)
-	}
-	if v.Ns || v.NoStoryboard {
-		regexps = append(regexps, _REGEXP_NS)
-	}
-	return
 
-}
 func (v *oszReq) GetClientFilename() string {
 	return _REGEXP_FN_NOT_ALLOW.ReplaceAllString(fmt.Sprintf("%d %s - %s.osz", v.BeatmapsetId, v.Artist, v.Title), "_")
 }
@@ -183,6 +168,7 @@ func DownloadBeatmapSetV2(c echo.Context) (err error) {
 	if req.isModify() {
 		logger.Infof("nv: %t, nb: %t, nh: %t, ns: %t", req.Nv, req.Nb, req.Nh, req.Ns)
 		data, e := io.ReadAll(reader)
+
 		if e != nil {
 			logger.Error(e)
 			return e
@@ -193,7 +179,7 @@ func DownloadBeatmapSetV2(c echo.Context) (err error) {
 			}
 		}
 
-		rd, e := rebuildOsz(data, req.getFilterRegex())
+		rd, e := rebuildOsz(data, req.Nv, req.Nh, req.Nb, req.Ns)
 		if e != nil {
 			logger.Error(e)
 			return e
@@ -264,7 +250,7 @@ func getBeatmapData(req oszReq) (reader io.ReadCloser, length int64, cached, sav
 
 }
 
-func rebuildOsz(data []byte, notInRegexp []*regexp.Regexp) (res bytes.Buffer, err error) {
+func rebuildOsz(data []byte, nv, nh, nb, ns bool) (res bytes.Buffer, err error) {
 	// ./beatmaps/{sid}/{sid}.osz
 	// ./beatmaps/{sid}/{sid}_nv.osz
 	// ./beatmaps/{sid}/{sid}_nb.osz
@@ -293,18 +279,57 @@ func rebuildOsz(data []byte, notInRegexp []*regexp.Regexp) (res bytes.Buffer, er
 			logger.Error(err)
 		}
 	}()
-	skip := false
+	background := map[string]bool{}
+	video := map[string]bool{}
+	storyBoard := map[string]bool{}
+	hitSound := map[string]bool{}
 	for _, f := range r.File {
-		skip = false
-		f.FileInfo()
-		for _, r2 := range notInRegexp {
-			if r2.MatchString(f.Name) {
-				skip = true
-				logger.Debugf("skiped file:'%s'", f.Name)
-				break
-			}
+		if f.FileInfo().IsDir() {
+			continue
 		}
-		if skip {
+		if !_REGEXP_OSU_FILES.MatchString(f.FileHeader.Name) {
+			continue
+		}
+		func() {
+			rc, err := f.Open()
+			if err != nil {
+				logger.Fatalf("Failed to open file %s: %v", f.Name, err)
+				return
+			}
+			defer rc.Close()
+			files := osu.ParseOsuFileInfo(rc)
+			for _, s := range files.Background {
+				background[s] = true
+			}
+			for _, s := range files.Video {
+				video[s] = true
+			}
+			for _, s := range files.StoryBoard {
+				storyBoard[s] = true
+			}
+			for _, s := range files.HitSound {
+				hitSound[s] = true
+			}
+		}()
+
+	}
+
+	for _, f := range r.File {
+		//nv, nh, nb, ns
+		if nv && video[f.FileHeader.Name] {
+			//logger.Debugf("skip file: %s", f.FileHeader.Name)
+			continue
+		}
+		if nh && (hitSound[f.FileHeader.Name] || _REGEXP_NH.MatchString(f.FileHeader.Name)) {
+			//logger.Debugf("skip file: %s", f.FileHeader.Name)
+			continue
+		}
+		if nb && background[f.FileHeader.Name] {
+			//logger.Debugf("skip file: %s", f.FileHeader.Name)
+			continue
+		}
+		if ns && (storyBoard[f.FileHeader.Name] || _REGEXP_NS.MatchString(f.FileHeader.Name)) {
+			//logger.Debugf("skip file: %s", f.FileHeader.Name)
 			continue
 		}
 		err = func() (err error) {
