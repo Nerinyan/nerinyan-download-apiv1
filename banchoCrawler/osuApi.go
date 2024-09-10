@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"github.com/pkg/errors"
+	"fmt"
 )
 
 type banchoJWT struct {
@@ -144,5 +146,8 @@ func login(refresh bool) (err error) {
 		return
 	}
 
+	if res.StatusCode != 200 {
+		return errors.New(fmt.Sprint(res.StatusCode, string(body)))
+	}
 	return json.Unmarshal(body, &config.Config.Osu.Token)
 }
